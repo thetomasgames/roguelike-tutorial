@@ -50,7 +50,7 @@ jobs:
       - run:
           name: run tests
           command: |
-            pipenv run pytest -vv -s 
+            pipenv run pytest -vv -s
 
       - store_artifacts:
           path: htmlcov

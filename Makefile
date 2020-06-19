@@ -1,3 +1,4 @@
+
 clean: clean-eggs clean-build
 	@find . -iname '*.pyc' -delete
 	@find . -iname '*.pyo' -delete
@@ -18,7 +19,7 @@ lint:
 	pipenv run pre-commit install && pipenv run pre-commit run -a -v
 
 test:
-	pipenv run pytest -x -s 
+	pipenv run pytest -x -s
 
 pip-install:
 	pipenv install --dev
