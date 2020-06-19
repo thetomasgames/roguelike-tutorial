@@ -1,0 +1,61 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/python:3.8.3-buster
+
+        # Global Variables
+        environment:
+          LOG_LEVEL: DEBUG
+
+    working_directory: ~/repo
+
+    steps:
+      - checkout
+
+      # Download and cache dependencies
+      - restore_cache:
+          name: "Restoring dependencies cache"
+          keys:
+          - v1-dependencies-{{ checksum "Pipfile.lock" }}
+
+      - run:
+          name: install system dependencies
+          command: sudo pip install pipenv --upgrade
+
+      - run:
+          name: install dependencies
+          command: pipenv install --dev --deploy
+
+      - save_cache:
+          name: "Saving dependencies cache"
+          paths:
+            - /home/circleci/.local/share/virtualenvs/
+          key: v1-dependencies-{{ checksum "Pipfile.lock" }}
+
+      - restore_cache:
+          name: "Restoring hooks cache"
+          key: v1-hooks-{{ checksum ".pre-commit-config.yaml" }}
+
+      - run:
+          name: linters
+          command: SKIP=no-commit-to-branch,pipenv-check pipenv run pre-commit run -a -v
+
+      - save_cache:
+          name: "Saving hooks cache"
+          paths:
+            - /home/circleci/.cache/pre-commit/
+          key: v1-hooks-{{ checksum ".pre-commit-config.yaml" }}
+
+      - run:
+          name: run tests
+          command: |
+            pipenv run pytest -vv -s 
+
+      - store_artifacts:
+          path: htmlcov
+          destination: test-reports
+
+branches:
+  only:
+    - master
