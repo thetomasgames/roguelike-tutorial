@@ -1,5 +1,7 @@
 from random import randint, seed
 
+import tcod as libtcod
+from entity import Entity
 from map_objects.rectangle import Rect
 from map_objects.tile import Tile
 
@@ -25,6 +27,8 @@ class GameMap:
         map_width,
         map_height,
         player,
+        entities,
+        max_monsters_per_room,
     ):
         rooms = []
         num_rooms = 0
@@ -61,6 +65,8 @@ class GameMap:
                         self.create_v_tunnel(prev_y, new_y, prev_x)
                         self.create_h_tunnel(prev_x, new_x, new_y)
 
+                self.place_entities(new_room, entities, max_monsters_per_room)
+
                 rooms.append(new_room)
                 num_rooms += 1
 
@@ -81,6 +87,34 @@ class GameMap:
             tile = self.tiles[x][y]
             tile.blocked = False
             tile.block_sight = False
+
+    def place_entities(self, room, entities, max_monsters_per_room):
+        number_of_monsters = randint(0, max_monsters_per_room)
+
+        for i in range(number_of_monsters):
+            x = randint(room.x1 + 1, room.x2 - 1)
+            y = randint(room.y1 + 1, room.y2 - 1)
+
+            if not any(
+                entity
+                for entity in entities
+                if entity.x == x and entity.y == y
+            ):
+                if randint(0, 100) < 80:
+                    monster = Entity(
+                        x,
+                        y,
+                        "o",
+                        libtcod.desaturated_green,
+                        "Orc",
+                        blocks=False,
+                    )
+                else:
+                    monster = Entity(
+                        x, y, "T", libtcod.darker_green, "Troll", blocks=True
+                    )
+
+            entities.append(monster)
 
     def is_blocked(self, x, y):
         if self.tiles[x][y].blocked:
